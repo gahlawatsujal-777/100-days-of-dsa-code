@@ -1,124 +1,66 @@
 #include <stdio.h>
-#include <stdlib.h>
-struct Node {
-    int data;
-    struct Node* left;
-    struct Node* right;
-};
-struct Node* createNode(int data) {
-    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
-    newNode->data = data;
-    newNode->left = newNode->right = NULL;
-    return newNode;
-}
-struct Node* insert(struct Node* root, int data) {
-    if (root == NULL)
-        return createNode(data);
-    if (data < root->data)
-        root->left = insert(root->left, data);
-    else if (data > root->data)
-        root->right = insert(root->right, data);
-    return root;
-}
-struct Node* findMin(struct Node* root) {
-    while (root->left != NULL)
-        root = root->left;
-    return root;
-}
-struct Node* deleteNode(struct Node* root, int key) {
-    if (root == NULL)
-        return NULL;
-    if (key < root->data)
-        root->left = deleteNode(root->left, key);
-    else if (key > root->data)
-        root->right = deleteNode(root->right, key);
-    else {
-        if (root->left == NULL && root->right == NULL) {
-            free(root);
-            return NULL;
-        }
-        else if (root->left == NULL) {
-            struct Node* temp = root->right;
-            free(root);
-            return temp;
-        }
-        else if (root->right == NULL) {
-            struct Node* temp = root->left;
-            free(root);
-            return temp;
-        }
+#include <limits.h>
+#include <stdbool.h>
 
-        struct Node* temp = findMin(root->right);
-        root->data = temp->data;
-        root->right = deleteNode(root->right, temp->data);
+#define MAX 100
+
+int minDistance(int dist[], bool visited[], int V) {
+    int min = INT_MAX, min_index;
+
+    for (int i = 0; i < V; i++) {
+        if (!visited[i] && dist[i] < min) {
+            min = dist[i];
+            min_index = i;
+        }
+    }
+    return min_index;
+}
+
+void dijkstra(int graph[MAX][MAX], int V, int src) {
+    int dist[V];
+    bool visited[V];
+
+    // Initialize
+    for (int i = 0; i < V; i++) {
+        dist[i] = INT_MAX;
+        visited[i] = false;
     }
 
-    return root;
+    dist[src] = 0;
+
+    for (int count = 0; count < V - 1; count++) {
+        int u = minDistance(dist, visited, V);
+        visited[u] = true;
+
+        for (int v = 0; v < V; v++) {
+            if (!visited[v] && graph[u][v] &&
+                dist[u] != INT_MAX &&
+                dist[u] + graph[u][v] < dist[v]) {
+
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+    // Print result
+    printf("Shortest distances from source:\n");
+    for (int i = 0; i < V; i++) {
+        printf("%d -> %d = %d\n", src, i, dist[i]);
+    }
 }
-void inorder(struct Node* root) {
-    if (root == NULL) return;
-    inorder(root->left);
-    printf("%d ", root->data);
-    inorder(root->right);
-}
-void preorder(struct Node* root) {
-    if (root == NULL) return;
-    printf("%d ", root->data);
-    preorder(root->left);
-    preorder(root->right);
-}
-void postorder(struct Node* root) {
-    if (root == NULL) return;
-    postorder(root->left);
-    postorder(root->right);
-    printf("%d ", root->data);
-}
+
 int main() {
-    struct Node* root = NULL;
-    int choice, value;
+    int V = 5;
 
-    while (1) {
-        printf("\n BST Menu \n");
-        printf("1. Insert\n");
-        printf("2. Delete\n");
-        printf("3. Inorder\n");
-        printf("4. Preorder\n");
-        printf("5. Postorder\n");
-        printf("6. Exit\n");
-        printf("Enter choice: ");
-        scanf("%d", &choice);
-        switch (choice) {
-            case 1:
-                printf("Enter value: ");
-                scanf("%d", &value);
-                root = insert(root, value);
-                break;
-            case 2:
-                printf("Enter value to delete: ");
-                scanf("%d", &value);
-                root = deleteNode(root, value);
-                break;
-            case 3:
-                printf("Inorder: ");
-                inorder(root);
-                printf("\n");
-                break;
-            case 4:
-                printf("Preorder: ");
-                preorder(root);
-                printf("\n");
-                break;
-            case 5:
-                printf("Postorder: ");
-                postorder(root);
-                printf("\n");
-                break;
-            case 6:
-                exit(0);
-            default:
-                printf("Invalid choice!\n");
-        }
-    }
+    int graph[MAX][MAX] = {
+        {0, 10, 0, 5, 0},
+        {0, 0, 1, 2, 0},
+        {0, 0, 0, 0, 4},
+        {0, 3, 9, 0, 2},
+        {7, 0, 6, 0, 0}
+    };
+
+    dijkstra(graph, V, 0);
 
     return 0;
 }
